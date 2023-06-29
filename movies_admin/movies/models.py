@@ -63,6 +63,7 @@ class Filmwork(TimeStampedMixin, UUIDMixin):
                             max_length=255,
                             choices=FilmType.choices,
                             default=FilmType.MOVIE)
+    file_path = models.TextField(_('file_path'), blank=True)
 
     def __str__(self) -> str:
         return self.title
