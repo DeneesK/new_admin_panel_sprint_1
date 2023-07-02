@@ -4,3 +4,4 @@ venv/
 .vscode/
 *.pyc
 .pytest_cache
+.DS_Store 
