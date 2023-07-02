@@ -18,73 +18,28 @@ class PostgresSaver:
 
     def save_all_data(self, data: Iterable, chunk: int) -> None:
         if isinstance(data[0], FilmWork):
-            self.save_movies(data, chunk)
+            self._save(data, chunk, 'film_work')
         elif isinstance(data[0], Person):
-            self.save_persons(data, chunk)
+            self._save(data, chunk, 'person')
         elif isinstance(data[0], Genre):
-            self.save_genres(data, chunk)
+            self._save(data, chunk, 'genre')
         elif isinstance(data[0], PersonFilmwork):
-            self.save_persons_movies(data, chunk)
+            self._save(data, chunk, 'person_film_work')
         elif isinstance(data[0], GenreFilmwork):
-            self.save_genres_movies(data, chunk)
+            self._save(data, chunk, 'genre_film_work')
 
-    def save_movies(self, data: Iterable, chunk: int) -> None:
-        insert_query = """INSERT INTO content.film_work VALUES (%(id)s,
-            %(title)s, %(description)s, %(creation_date)s, %(rating)s,
-            %(type)s, %(file_path)s, %(created_at)s, %(updated_at)s)
-            ON CONFLICT (id) DO NOTHING"""
-        data = [asdict(f) for f in data]
+    def _save(self, data, chunk, name):
+        data = [tuple(asdict(f).values()) for f in data]
         curs = self.conn.cursor()
         try:
+            number = len(data[0]) - 1
+            insert_query = f"""INSERT INTO content.{name}
+                            VALUES ({number * '%s,'}%s)
+                            ON CONFLICT (id) DO NOTHING"""
             execute_batch(curs, insert_query, data, page_size=chunk)
             self.conn.commit()
         except DatabaseError as ex:
             logger.error('unable to save data - %s', ex)
-
-    def save_persons(self, data: Iterable, chunk: int) -> None:
-        insert_query = """INSERT INTO content.person VALUES (%(id)s,
-            %(full_name)s, %(created_at)s, %(updated_at)s)
-            ON CONFLICT (id) DO NOTHING"""
-        data = [asdict(f) for f in data]
-        curs = self.conn.cursor()
-        try:
-            execute_batch(curs, insert_query, data, page_size=chunk)
-            self.conn.commit()
-        except DatabaseError as ex:
-            logger.error('unable to save data - %s', ex)
-
-    def save_genres(self, data: Iterable, chunk: int) -> None:
-        insert_query = """INSERT INTO content.genre VALUES (%(id)s,
-            %(name)s, %(description)s, %(created_at)s, %(updated_at)s)
-            ON CONFLICT (id) DO NOTHING"""
-        data = [asdict(f) for f in data]
-        curs = self.conn.cursor()
-        try:
-            execute_batch(curs, insert_query, data, page_size=chunk)
-            self.conn.commit()
-        except DatabaseError as ex:
-            logger.error('unable to save data - %s', ex)
-
-    def save_genres_movies(self, data: Iterable, chunk: int) -> None:
-        insert_query = """INSERT INTO content.genre_film_work VALUES (%(id)s,
-            %(film_work_id)s, %(genre_id)s, %(created_at)s)
-            ON CONFLICT (id) DO NOTHING"""
-        data = [asdict(f) for f in data]
-        curs = self.conn.cursor()
-        try:
-            execute_batch(curs, insert_query, data, page_size=chunk)
-            self.conn.commit()
-        except DatabaseError as ex:
-            logger.error('unable to save data - %s', ex)
-
-    def save_persons_movies(self, data: Iterable, chunk: int) -> None:
-        insert_query = """INSERT INTO content.person_film_work VALUES (%(id)s,
-        %(role)s, %(film_work_id)s, %(person_id)s, %(created_at)s)
-        ON CONFLICT (id) DO NOTHING"""
-        data = [asdict(f) for f in data]
-        curs = self.conn.cursor()
-        try:
-            execute_batch(curs, insert_query, data, page_size=chunk)
-            self.conn.commit()
-        except DatabaseError as ex:
-            logger.error('unable to save data - %s', ex)
+            curs.close()
+        self.conn.commit()
+        curs.close()

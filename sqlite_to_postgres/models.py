@@ -4,43 +4,55 @@ from uuid import UUID
 
 
 @dataclass
-class BaseMixin:
+class FilmWork:
     id: UUID
-    created_at: datetime
-
-
-@dataclass
-class FilmWork(BaseMixin):
     title: str
     description: str
     creation_date: date | None
     file_path: str
     rating: float
-    updated_at: datetime
     type: str
-
-
-@dataclass
-class Person(BaseMixin):
-    full_name: str
+    created_at: datetime
     updated_at: datetime
 
 
 @dataclass
-class Genre(BaseMixin):
+class Person:
+    id: UUID
+    full_name: str
+    created_at: datetime
+    updated_at: datetime
+
+
+@dataclass
+class Genre:
+    id: UUID
     name: str
     description: str
+    created_at: datetime
     updated_at: datetime
 
 
 @dataclass
-class PersonFilmwork(BaseMixin):
-    role: str
+class PersonFilmwork:
+    id: UUID
     film_work_id: UUID
     person_id: UUID
+    role: str
+    created_at: datetime
 
 
 @dataclass
-class GenreFilmwork(BaseMixin):
+class GenreFilmwork:
+    id: UUID
     film_work_id: UUID
     genre_id: UUID
+    created_at: datetime
+
+
+models = {'genre': Genre,
+          'genre_film_work': GenreFilmwork,
+          'person_film_work': PersonFilmwork,
+          'person': Person,
+          'film_work': FilmWork,
+          }
